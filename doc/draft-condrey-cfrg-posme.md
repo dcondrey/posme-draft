@@ -70,3 +70,40 @@ log N) hash evaluations with no arena allocation. No trusted setup
 is required.
 
 --- middle
+
+# Introduction {#introduction}
+
+Existing primitives for proving sequential computation have
+complementary weaknesses. Verifiable Delay Functions (VDFs)
+{{Boneh2018}} {{Wesolowski2019}} prove sequential time but offer no memory-hardness.
+Proofs of Sequential Work (PoSW) {{CohenPietrzak2018}} prove
+traversal of a depth-robust graph but operate over static memory.
+Memory-hard functions (MHFs) such as Argon2id {{RFC9106}} resist
+ASIC acceleration but are single-evaluation primitives with no
+chain proof system. Composing these (e.g., chaining Argon2id with
+Merkle sampling) produces a construction where sequentiality and
+memory-hardness are independent properties; neither reinforces the
+other.
+
+PoSME takes a different approach. A persistent mutable arena IS
+the computation state. Each step reads via data-dependent pointer
+chasing (sequential because each address depends on the previous
+read's result) and modifies the arena in-place. A per-block
+causal hash chain binds each block's value to the cursor of the
+step that wrote it, preventing forgery (the adversary cannot
+produce a valid causal hash without knowing the writer's cursor,
+which depends on d other blocks' causal hashes, recursively).
+The data and causal hash are symbiotically bound: new data
+depends on the old causal hash, and the new causal hash depends
+on the cursor.
+
+The primary contribution is latency-bound ASIC resistance. Each
+pointer-chase iteration is bottlenecked by random DRAM access
+(~45ns on DDR5 {{JESD79-5}}), with hash computation (~3ns via
+BLAKE3) as a minor component. The ASIC advantage is bounded by
+the memory latency ratio (approximately 2x for DDR5 vs HBM3),
+tighter than the 8-16x bandwidth bounds of Argon2id
+{{Biryukov2016}}. Memory latency improves more slowly than
+bandwidth across technology generations (constrained by signal
+propagation and DRAM cell sensing time), making this bound more
+durable than bandwidth-based resistance.
