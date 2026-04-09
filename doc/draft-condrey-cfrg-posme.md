@@ -107,3 +107,38 @@ tighter than the 8-16x bandwidth bounds of Argon2id
 bandwidth across technology generations (constrained by signal
 propagation and DRAM cell sensing time), making this bound more
 durable than bandwidth-based resistance.
+
+## Related Work {#related-work}
+
+### Proofs of Sequential Work
+
+PoSW {{CohenPietrzak2018}} proves traversal of a depth-robust
+graph via Fiat-Shamir-sampled Merkle proofs. PoSME differs: the
+graph is a mutable arena (not a static DAG), the access pattern
+is data-dependent (not fixed), and each node carries a causal hash
+binding its value to its full write history.
+
+### Memory-Hard Functions
+
+Argon2id {{RFC9106}} resists TMTO via bandwidth-hardness
+{{Boneh2016}}, with a single-pass TMTO penalty of approximately 2x. PoSME uses Argon2id
+only for arena initialization. The ongoing computation uses
+pointer-chasing with in-place writes, creating latency-hardness
+(2x ASIC bound vs Argon2id's 8-16x). PoSME's TMTO penalty is
+approximately 2+2\*rho for zero-storage adversaries, where
+rho = K/N is the write density (10x at rho=4 vs Argon2id's 2x).
+
+### Proofs of Space-Time
+
+Proofs of Space-Time (PoST) {{Chia2024}} {{Spacemesh2023}} enforce both
+sequential time and persistent storage by requiring a Prover to
+repeatedly prove possession of stored data over a sequence of
+time intervals. PoST operates over a static graph: the stored
+data does not change between proofs, and the graph structure is
+fixed before execution. PoSME differs in that the arena is
+mutable (each step modifies it), the access pattern is data-
+dependent (addresses are determined by arena contents, not
+pre-computed), and each block carries a causal hash binding its
+current value to its write history. These differences make PoSME
+a different construction with different TMTO characteristics,
+not a strict improvement over PoST.
