@@ -142,3 +142,38 @@ pre-computed), and each block carries a causal hash binding its
 current value to its write history. These differences make PoSME
 a different construction with different TMTO characteristics,
 not a strict improvement over PoST.
+
+# Conventions and Definitions {#conventions}
+
+{::boilerplate bcp14-tagged}
+
+H:
+: BLAKE3 in XOF mode, producing 32-byte output.
+
+XOF(input, index):
+: BLAKE3 XOF evaluated at (input \|\| I2OSP(index, 4)),
+  producing 4 bytes.
+
+I2OSP(x, len):
+: Integer-to-Octet-String Primitive per {{!RFC8017}}.
+
+MerkleRoot(A):
+: Merkle tree root over arena blocks using domain-separated
+  hashing per {{RFC6962}}.
+
+MerkleUpdate(root, index, new\_value):
+: Incremental Merkle root update at the given index.
+
+Prover:
+: The entity executing the PoSME computation and generating proofs.
+
+Verifier:
+: The entity checking PoSME proofs.
+
+Arena:
+: A mutable array of N blocks, each containing a 32-byte data
+  field and a 32-byte causal hash.
+
+Causal hash:
+: A per-block running hash chain binding each block's value to
+  the cursor of the step that wrote it.
