@@ -177,3 +177,39 @@ Arena:
 Causal hash:
 : A per-block running hash chain binding each block's value to
   the cursor of the step that wrote it.
+
+# Construction {#construction}
+
+## Arena Block Format {#block-format}
+
+Each arena block is a pair:
+
+~~~ pseudocode
+block = {
+    data:   bytes[32],
+    causal: bytes[32]
+}
+~~~
+
+The `data` field stores the block's computational value. The
+`causal` field stores the causal hash chain: a running digest
+binding the block's current value to the cursor of the step
+that last wrote it.
+
+## Arena Initialization {#init}
+
+The arena is initialized deterministically from a public seed s:
+
+~~~ pseudocode
+for i in 0..N-1:
+    if i == 0:
+        A[0].data = H("PoSME-init-v1" || s || I2OSP(0, 4))
+    else:
+        A[i].data = H("PoSME-init-v1" || s || I2OSP(i, 4)
+                      || A[i-1].data
+                      || A[floor(i/2)].data)
+    A[i].causal = H("PoSME-causal-v1" || s || I2OSP(i, 4))
+
+root_0 = MerkleRoot(A)
+T_0 = H("PoSME-transcript-v1" || s || root_0)
+~~~
