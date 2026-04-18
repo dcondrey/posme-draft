@@ -213,3 +213,33 @@ for i in 0..N-1:
 root_0 = MerkleRoot(A)
 T_0 = H("PoSME-transcript-v1" || s || root_0)
 ~~~
+
+## Step Function {#step-function}
+
+At each step t in {1, ..., K}:
+
+~~~ pseudocode
+STEP(t):
+    // 1. Pointer-chase reads (data-dependent)
+    cursor = T_{t-1}
+    addrs = []
+    for j in 0..d-1:
+        a = OS2IP(XOF(cursor, j)) mod N
+        addrs.append(a)
+        val = A[a]
+        cursor = H(cursor || val.data || val.causal)
+
+    // 2. Write with symbiotic binding
+    w = OS2IP(XOF(cursor, d)) mod N
+    old = A[w]
+    new_data = H(old.data || cursor || old.causal)
+    new_causal = H(old.causal || cursor || I2OSP(t, 4))
+    A[w] = {data: new_data, causal: new_causal}
+
+    // 3. Update commitments
+    root_t = MerkleUpdate(root_{t-1}, w, A[w])
+    T_t = H(T_{t-1} || I2OSP(t, 4) || cursor || root_t)
+
+    // 4. Log step
+    log[t] = {addrs, reads, w, old, A[w], cursor, root_t}
+~~~
