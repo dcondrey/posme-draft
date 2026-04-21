@@ -243,3 +243,37 @@ STEP(t):
     // 4. Log step
     log[t] = {addrs, reads, w, old, A[w], cursor, root_t}
 ~~~
+
+### Jitter Entanglement {#jitter-entanglement}
+
+At regular intervals during execution, the Prover samples CPU
+jitter entropy and folds it into the transcript chain.
+
+~~~ pseudocode
+ENTANGLE(T_t, m, K):
+    interval = K / m
+    jitter_samples = []
+
+    // At steps t where t mod interval == 0:
+    j = sample_cpu_jitter()
+    jitter_samples.append((t, j))
+    T_t = H("PoSME-entangle-v1" || T_t || j)
+~~~
+
+## Root Chain Commitment {#root-chain}
+
+The Prover commits to the sequence of ALL K arena roots:
+
+~~~ pseudocode
+R = [root_0, root_1, ..., root_K]
+C_roots = MerkleRoot(R)
+~~~
+
+## Proof Generation {#proof-gen}
+
+~~~ pseudocode
+PROVE(K, Q, R_depth):
+    C_roots = MerkleRoot([root_0, ..., root_K])
+    challenges = FS(T_K, C_roots, Q)
+    proof = {params, T_K, C_roots, step_proofs: []}
+~~~
