@@ -277,3 +277,20 @@ PROVE(K, Q, R_depth):
     challenges = FS(T_K, C_roots, Q)
     proof = {params, T_K, C_roots, step_proofs: []}
 ~~~
+
+# Verification {#verification}
+
+## Verification Procedure {#verify-procedure}
+
+The Verifier receives (seed, params, T\_K, C\_roots, proof).
+
+# Security Analysis {#security}
+
+## Threat Model {#threat-model}
+
+The adversary is a probabilistic polynomial-time algorithm with
+random oracle access to H.
+
+## Forgery Prevention {#soundness}
+
+The causal hash mechanism prevents block value fabrication.
