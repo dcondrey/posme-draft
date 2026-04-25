@@ -294,3 +294,18 @@ random oracle access to H.
 ## Forgery Prevention {#soundness}
 
 The causal hash mechanism prevents block value fabrication.
+
+# Parameters {#parameters}
+
+## Recommended Parameters {#recommended-params}
+
+| Profile | N | Arena | rho | K | Q | R | Peak RAM | TMTO | Use Case |
+|---|---|---|---|---|---|---|---|---|---|
+| Compact | 2^18 | 16 MiB | 16 | 16\*N | 64 | 2 | ~32 MiB | 34x | Attestation |
+
+--- back
+
+# Acknowledgements {#acknowledgements}
+{:numbered="false"}
+
+The author thanks the CFRG for foundational work.
