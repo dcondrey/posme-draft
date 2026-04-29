@@ -1,27 +1,22 @@
-# Internet Draft Template Repository
+# Proof of Sequential Memory Execution (PoSME)
 
-The contents of this repository can be used to manage the editing of an
-[Internet Draft](https://authors.ietf.org/en/content-guidelines-overview).
+This is the working area for the IRTF Internet-Draft, "Proof of Sequential Memory Execution (PoSME)", draft-condrey-cfrg-posme.
 
-This tool provides many
-[features](https://github.com/martinthomson/i-d-template/blob/main/doc/FEATURES.md).
+* [Editor's Copy](https://dcondrey.github.io/posme-draft/#go.draft-condrey-cfrg-posme.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-condrey-cfrg-posme)
 
-# Getting Started
+## Contributing
 
-You need a [GitHub account](https://github.com/join).
+See the [guidelines for contributions](CONTRIBUTING.md).
 
-The [template
-repository](https://github.com/martinthomson/i-d-template/blob/main/doc/TEMPLATE.md)
-is the easiest way to get started.  You don't need any additional software.
+Contributions can be made by creating pull requests. The GitHub interface supports creating pull requests using the Edit button.
 
-If you want to use command-line tools, make sure you have the [necessary
-software
-installed](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
-[Manual
-setup](https://github.com/martinthomson/i-d-template/blob/main/doc/REPO.md) is
-mostly automated.
+## Command Line Usage
 
-Work.
+Formatted text and calculation results can be produced using `make`.
 
-[Submit the final
-product](https://github.com/martinthomson/i-d-template/blob/main/doc/SUBMITTING.md).
+```sh
+$ make
+```
+
+Command line usage requires that you have the necessary software installed. See [the instructions](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
