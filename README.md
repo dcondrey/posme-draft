@@ -1,9 +1,9 @@
 # Proof of Sequential Memory Execution (PoSME)
 
-This is the working area for the IRTF Internet-Draft, "Proof of Sequential Memory Execution (PoSME)", draft-condrey-cfrg-posme.
+This is the working area for the Independent Submission Internet-Draft, "Proof of Sequential Memory Execution (PoSME)", draft-condrey-posme.
 
-* [Editor's Copy](https://dcondrey.github.io/posme-draft/#go.draft-condrey-cfrg-posme.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-condrey-cfrg-posme)
+* [Editor's Copy](https://dcondrey.github.io/posme-draft/#go.draft-condrey-posme.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-condrey-posme)
 
 ## Contributing
 
