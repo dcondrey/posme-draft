@@ -12,6 +12,18 @@
 
 ---
 
+This is the working area for the individual Internet-Draft *Proof of Sequential Memory
+Execution (PoSME)*.
+
+PoSME is a memory-hard primitive that combines a mutable arena, data-dependent pointer-chase
+addressing and per-block causal hash binding in one step function. A prover runs K sequential
+steps over an N-block arena; each step reads d blocks at addresses determined by the previous
+read, writes one block entangled with its spatial neighbours, and advances a transcript chain.
+That buys sequential-time enforcement anchored in physical latency floors, forgery prevention
+that reduces to collision resistance of H, and time-memory trade-off resistance scaling as
+1/alpha in the adversary's storage fraction. Verification costs O(Q * d^R * log N) hash
+evaluations, allocates no arena, and needs no trusted setup.
+
 * [Editor's Copy](https://dcondrey.github.io/posme-draft/#go.draft-condrey-posme.html)
 * [Datatracker Page](https://datatracker.ietf.org/doc/draft-condrey-posme)
 
