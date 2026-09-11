@@ -1,14 +1,16 @@
 <!-- repo-header:start -->
-<img src="https://github.com/dcondrey.png?size=160" alt="Proof of Sequential Memory Execution (PoSME) logo" width="120" align="left">
+<h3 align="center">Proof of Sequential Memory Execution (PoSME)</h3>
 
-<h1>Proof of Sequential Memory Execution (PoSME)</h1>
+<p align="center"><strong>Internet-Draft: Proof of Sequential Memory Execution (PoSME) - draft-condrey-cfrg-posme</strong></p>
 
-<p><strong>Internet-Draft: Proof of Sequential Memory Execution (PoSME) - draft-condrey-cfrg-posme</strong></p>
-
-<br clear="left">
-
-[![CI](https://img.shields.io/github/actions/workflow/status/dcondrey/posme-draft/publish.yml?style=flat-square&labelColor=20232a&branch=main&label=CI)](https://github.com/dcondrey/posme-draft/actions/workflows/publish.yml) [![Best Practices Evidence](https://img.shields.io/badge/best%20practices-evidence%20reviewed-6a4c93?style=flat-square&labelColor=20232a)](.bestpractices.json) [![IETF](https://img.shields.io/badge/standard-IETF%20draft-6a4c93?style=flat-square&labelColor=20232a)](https://datatracker.ietf.org/) [![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=flat-square&labelColor=20232a)](https://github.com/sponsors/dcondrey)
+<p align="center">
+  <a href=".bestpractices.json"><img src="https://img.shields.io/badge/best%20practices-evidence%20reviewed-6a4c93?style=flat-square&labelColor=20232a" alt="Best Practices Evidence"></a>
+  <a href="https://datatracker.ietf.org/"><img src="https://img.shields.io/badge/standard-IETF%20draft-6a4c93?style=flat-square&labelColor=20232a" alt="IETF"></a>
+  <a href="https://github.com/sponsors/dcondrey"><img src="https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=flat-square&labelColor=20232a" alt="GitHub Sponsors"></a>
+</p>
 <!-- repo-header:end -->
+
+---
 
 * [Editor's Copy](https://dcondrey.github.io/posme-draft/#go.draft-condrey-posme.html)
 * [Datatracker Page](https://datatracker.ietf.org/doc/draft-condrey-posme)
