@@ -12,7 +12,7 @@
 ]>
 
 
-<rfc ipr="trust200902" docName="draft-condrey-posme-00" category="exp" submissionType="independent" tocDepth="4" tocInclude="true" sortRefs="true" symRefs="true">
+<rfc ipr="trust200902" docName="draft-condrey-posme-latest" category="exp" submissionType="independent" tocDepth="4" tocInclude="true" sortRefs="true" symRefs="true">
   <front>
     <title abbrev="PoSME">Proof of Sequential Memory Execution (PoSME)</title>
 
@@ -30,8 +30,8 @@
 
     <date year="2026" month="May" day="15"/>
 
-    
-    
+
+
     <keyword>memory-hard</keyword> <keyword>sequential execution</keyword> <keyword>causal hash</keyword> <keyword>latency-bound</keyword> <keyword>ASIC resistance</keyword>
 
     <abstract>
@@ -354,23 +354,23 @@ and TMTO resistance via spatial neighborhood entanglement.</t>
 <figure><sourcecode type="pseudocode"><![CDATA[
 STEP(t):
     cursor = T_{t-1}
-    
+
     // 1. Determine Target Bank
     bank_id = XOF(cursor, 0) mod params.B_banks
-    
+
     // Start high-resolution cycle counter
-    t_start = RDTSC() 
+    t_start = RDTSC()
 
     // 2. Intra-Step Bank Collision Reads
     addrs = []
     for j in 0..d-1:
         // Generate pseudo-random address
         raw_a = XOF(cursor, j + 1) mod params.N
-        
+
         // Mutate raw_a to ensure it maps to bank_id
         a = force_bank_mapping(raw_a, bank_id, params)
         addrs.append(a)
-        
+
         val = A[a]
         cursor = H(cursor || val.data || val.causal)
 
@@ -378,14 +378,14 @@ STEP(t):
     raw_w = XOF(cursor, d + 1) mod params.N
     w = force_bank_mapping(raw_w, bank_id, params)
     old = A[w]
-    
+
     // Incorporate causal hashes of logical neighbors
     n_prev = A[(w - 1) mod params.N].causal
     n_next = A[(w + 1) mod params.N].causal
-    
-    new_data = H(old.data || cursor || old.causal 
+
+    new_data = H(old.data || cursor || old.causal
                   || n_prev || n_next)
-    new_causal = H(old.causal || cursor || I2OSP(t, 4) 
+    new_causal = H(old.causal || cursor || I2OSP(t, 4)
                     || n_prev || n_next)
     A[w] = {data: new_data, causal: new_causal}
 
@@ -459,26 +459,26 @@ derivation.</t>
 </section>
 <section anchor="bank-collision"><name>Intra-Step Bank Collisions</name>
 
-<t>Standard memory controllers achieve high bandwidth by interleaving 
-sequential reads across multiple hardware banks, keeping multiple 
-row-buffers open. PoSME explicitly defeats this optimization to 
+<t>Standard memory controllers achieve high bandwidth by interleaving
+sequential reads across multiple hardware banks, keeping multiple
+row-buffers open. PoSME explicitly defeats this optimization to
 enforce a strict latency floor.</t>
 
-<t>The <spanx style="verb">force_bank_mapping(raw_a, bank_id, params)</spanx> function modifies the 
-specific bits of the logical address <spanx style="verb">raw_a</spanx> that the memory controller 
+<t>The <spanx style="verb">force_bank_mapping(raw_a, bank_id, params)</spanx> function modifies the
+specific bits of the logical address <spanx style="verb">raw_a</spanx> that the memory controller
 uses for bank selection, replacing them with <spanx style="verb">bank_id</spanx>.</t>
 
-<t>By forcing all $d$ reads and the final write to target the <em>same</em> 
-physical bank but <em>different</em> pseudo-random rows, the memory controller 
-suffers a "Bank Conflict" on every access. This forces a physical Row 
-Precharge ($t_{RP}$) and RAS-to-CAS Delay ($t_{RCD}$) penalty for every 
-hop, anchoring the execution time to the thermodynamic limits of the 
+<t>By forcing all $d$ reads and the final write to target the <em>same</em>
+physical bank but <em>different</em> pseudo-random rows, the memory controller
+suffers a "Bank Conflict" on every access. This forces a physical Row
+Precharge ($t_{RP}$) and RAS-to-CAS Delay ($t_{RCD}$) penalty for every
+hop, anchoring the execution time to the thermodynamic limits of the
 DRAM capacitor rather than the logic speed of the processor.</t>
 
 </section>
 <section anchor="spatial-binding"><name>Spatial Neighborhood Entanglement</name>
 
-<t>The write step cryptographically binds the updated block to the current 
+<t>The write step cryptographically binds the updated block to the current
 state of its logical neighbors, <spanx style="verb">A[w-1]</spanx> and <spanx style="verb">A[w+1]</spanx>.</t>
 
 <t>This transforms the Time-Memory Trade-Off (TMTO) penalty from a
@@ -1953,15 +1953,15 @@ margin for large $K$.</t>
 
 <section anchor="impl-bank"><name>Bank Mapping and Conflicts</name>
 
-<t>The effectiveness of intra-step bank collisions (<xref target="bank-collision"/>) 
-depends on the accuracy of the <spanx style="verb">force_bank_mapping</spanx> logic. Memory 
-controllers typically use specific physical address bits for bank 
+<t>The effectiveness of intra-step bank collisions (<xref target="bank-collision"/>)
+depends on the accuracy of the <spanx style="verb">force_bank_mapping</spanx> logic. Memory
+controllers typically use specific physical address bits for bank
 selection (e.g., bits 13-16 on many DDR4/DDR5 platforms).</t>
 
-<t>Prover implementations <bcp14>SHOULD</bcp14> use platform-specific knowledge or 
-calibration loops to identify these bits. If the exact mapping is 
-unknown, the Prover <bcp14>MAY</bcp14> use a XOR-sum of multiple candidate bit 
-ranges to increase the probability of a physical bank conflict. 
+<t>Prover implementations <bcp14>SHOULD</bcp14> use platform-specific knowledge or
+calibration loops to identify these bits. If the exact mapping is
+unknown, the Prover <bcp14>MAY</bcp14> use a XOR-sum of multiple candidate bit
+ranges to increase the probability of a physical bank conflict.
 Verifiers do not check physical mapping accuracy; they only check
 the logical consistency of the derived addresses according to the
 protocol parameters.</t>
@@ -1969,7 +1969,7 @@ protocol parameters.</t>
 </section>
 <section anchor="impl-timing"><name>Timing Counters</name>
 
-<t>Provers <bcp14>MUST</bcp14> use the highest-resolution monotonic hardware counter 
+<t>Provers <bcp14>MUST</bcp14> use the highest-resolution monotonic hardware counter
 available to capture <spanx style="verb">delta_t</spanx>.</t>
 
 <t><list style="symbols">
@@ -1977,20 +1977,20 @@ available to capture <spanx style="verb">delta_t</spanx>.</t>
   <t><strong>AArch64:</strong> The <spanx style="verb">CNTPCT_EL0</spanx> system register.</t>
 </list></t>
 
-<t>The resulting <spanx style="verb">delta_t</spanx> <bcp14>SHOULD NOT</bcp14> be normalized or filtered. Raw 
-cycle counts are required to preserve the stochastic jitter profile 
+<t>The resulting <spanx style="verb">delta_t</spanx> <bcp14>SHOULD NOT</bcp14> be normalized or filtered. Raw
+cycle counts are required to preserve the stochastic jitter profile
 arising from DRAM refresh cycles ($t_{REFW}$) and OS-level noise.</t>
 
 </section>
 <section anchor="impl-cache"><name>Cache Management</name>
 
-<t>To ensure the arena computation is bottlenecked by DRAM latency 
-rather than CPU cache hits, the arena size $N$ <bcp14>SHOULD</bcp14> be configured 
-to exceed the Prover's L3 cache capacity. For Standard and Maximum 
-profiles, the arena sizes (32 MiB to 2 GiB) are specifically chosen 
+<t>To ensure the arena computation is bottlenecked by DRAM latency
+rather than CPU cache hits, the arena size $N$ <bcp14>SHOULD</bcp14> be configured
+to exceed the Prover's L3 cache capacity. For Standard and Maximum
+profiles, the arena sizes (32 MiB to 2 GiB) are specifically chosen
 to exceed the 16-96 MiB caches typical of commodity processors.</t>
 
-<t>Provers <bcp14>MAY</bcp14> use cache-bypass instructions (e.g., <spanx style="verb">MOVNTI</spanx> on x86) 
+<t>Provers <bcp14>MAY</bcp14> use cache-bypass instructions (e.g., <spanx style="verb">MOVNTI</spanx> on x86)
 for arena writes to further enforce DRAM-bounded execution.</t>
 
 </section>
