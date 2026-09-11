@@ -39,6 +39,14 @@ informative:
   RFC9106:
   RFC7914:
   RFC6962:
+  PoSME-paper:
+    title: "PoSME: Proof of Sequential Memory Execution via Latency-Bound Pointer Chasing with Causal Hash Binding"
+    target: "https://arxiv.org/abs/2604.15751"
+    author:
+      - fullname: David Condrey
+    date: 2026
+    seriesinfo:
+      arXiv: "2604.15751"
   C2PA:
     title: "C2PA Technical Specification v2.1"
     target: "https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html"
@@ -191,9 +199,10 @@ chasing), writes one block with spatial neighborhood entanglement
 The construction provides three properties: (1) unconditional
 sequential time enforcement anchored in physics-bounded latency
 floors, (2) forgery prevention via causal hashes (reduces to
-collision resistance of H), and (3) TMTO resistance scaling
-as $1/\alpha$ with spatial entanglement, where $\alpha$ is the
-adversary's storage fraction.
+collision resistance of H), and (3) memory-hardness via a
+space-time product lower bound $S \cdot T = \Omega(K^2)$,
+super-linear in $1/\alpha$ for an adversary's storage fraction
+$\alpha$.
 Verification requires O(Q * d^R * log N) hash evaluations with no
 arena allocation. No trusted setup is required.
 
@@ -231,7 +240,7 @@ on the cursor.
 
 The primary contributions are (a) a physics-bounded latency floor
 with cross-generation durability and (b) TMTO resistance that
-scales as $\rho/\alpha$ under spatial entanglement. Unlike bandwidth-bound constructions where the
+yields a space-time product $S \cdot T = \Omega(K^2)$ under spatial entanglement. Unlike bandwidth-bound constructions where the
 ASIC advantage scales with technology improvements, PoSME is
 bottlenecked by random memory access latency. For arena sizes
 exceeding on-die SRAM, the ASIC advantage is bounded by the
@@ -305,9 +314,9 @@ of approximately 2x. PoSME uses a custom logarithmic skip-link
 initialization ({{init}}) to ensure Omega(sqrt(N)) space-hardness
 from the first step. The ongoing computation uses pointer-chasing
 with in-place writes, creating a latency-bound bottleneck.
-PoSME's TMTO penalty is $1 + 2\rho(1-\alpha)^2/\alpha$ for an
-adversary storing $\alpha N$ blocks, where $\rho = K/N$ is the
-write density.
+PoSME's memory-hardness is a space-time lower bound
+$S \cdot T = \Omega(K^2)$ for an adversary storing $\alpha N$
+blocks, where $\rho = K/N$ is the write density.
 
 
 ### Proofs of Space-Time
@@ -877,9 +886,9 @@ The following table summarizes the dependency:
 |---|---|---|
 | 1 (Soundness) | A2 | Forgery advantage $\le K \cdot \epsilon_{\text{cr}}$ |
 | 2 (Address Uniformity) | A1 | Addresses pairwise independent, near-uniform |
-| 3 (Spatial Cascade TMTO) | A1, A3, A4 | Per-step cost $\ge d(1 + 2\rho(1-\alpha)^2/\alpha)$ |
-| 4 (Sequential Cascade) | A3, A4 | Cascade is sequential ($L \cdot \rho$ critical path) |
-| 5 (Checkpoint Dominance) | A4 | Partial checkpoints strictly suboptimal |
+| 3 (Space-Time Product) | A1, A3, A4 | $S \cdot T \ge \Omega(K^2)$ via branching recomputation |
+| 4 (Temporal Staleness) | A1, A3, A4 | Stored current state is stale; strengthens $W \to W^*$ |
+| 5 (Adaptive Bound) | A1, A4 | Adaptive storage gives no advantage; no factor loss |
 
 **Scope limitation.** No composability (UC-security) claim is
 made. PoSME is analyzed as a standalone primitive in the random
@@ -983,9 +992,9 @@ a stored block on each side. For an adversary storing $\alpha N$
 blocks, the expected cascade width is $2(1-\alpha)/\alpha$
 (geometric distribution), and each block in the cascade costs
 $\rho$ hash evaluations to replay. The per-miss recomputation
-cost is therefore $\Theta(\rho/\alpha)$, compared to
-$\Theta(\rho)$ without spatial entanglement. The $1/\alpha$
-factor means that reducing storage becomes increasingly
+cost is therefore the branching-process expectation
+$W(\alpha,\rho)$ (Theorem 3), which is exponential in $\rho$ when
+$\alpha < 1 - 1/d$. This means that reducing storage becomes increasingly
 expensive: halving storage more than doubles recomputation cost.
 
 ## TMTO Lower Bound {#tmto}
@@ -999,7 +1008,7 @@ The transcript chain T\_0 through T\_K must be computed
 sequentially to produce T\_K before Fiat-Shamir challenges are
 derived. This is an $\Omega(K)$ lower bound regardless of storage.
 
-### Spatial Cascade TMTO {#spatial-cascade-tmto}
+### Space-Time Product {#spatial-cascade-tmto}
 
 Each step writes 1 block at a uniformly random address
 (Theorem 2). After $K$ steps with write density $\rho = K/N$,
@@ -1007,20 +1016,34 @@ each block has been written $\rho$ times on average. Because
 each write is bound to its spatial neighbors' causal hashes,
 missing blocks cannot be recomputed in isolation.
 
-Theorem 3 ({{per-step-recomp}}) establishes the TMTO ratio:
+Theorem 3 ({{per-step-recomp}}) establishes a space-time product
+lower bound. Reconstructing a missing block is recursive; its
+expected cost per miss is a Galton-Watson branching process with
+offspring mean $d(1-\alpha)$:
 
 ~~~ artwork
-TMTO(alpha) = 1 + 2*rho*(1-alpha)^2 / alpha
+S*T >= [ alpha*(1-alpha)*d*W(alpha,rho) / rho ] * K^2
+W(alpha,rho) = sum_{l=0}^{rho} [ d*(1-alpha) ]^l
 ~~~
 
-| rho | alpha=0.5 | alpha=0.25 | alpha=0.1 | alpha=0.01 |
-|---|---|---|---|---|
-| 1 | 2x | 5x | 17x | 197x |
-| 4 | 5x | 19x | 65x | 785x |
-| 16 | 17x | 73x | 257x | 3,137x |
+When $d(1-\alpha) > 1$ (i.e. $\alpha < \alpha_c = 1 - 1/d$) the
+branching process is supercritical and $W$ grows exponentially in
+$\rho$. For the recommended $(d=8, \rho=4)$, $S \cdot T = \Omega(K^2)$
+for all constant $\alpha$. The space-time product at representative
+storage fractions (honest cost is $2K^2$):
 
-K MUST be at least N ($\rho \ge 1$) for meaningful TMTO resistance.
-Values of $\rho \ge 4$ are RECOMMENDED.
+| alpha | d(1-alpha) | W(alpha,rho) | S*T / K^2 |
+|---|---|---|---|
+| 1/6 (adversary-optimal) | 6.67 | 2324 | 645 |
+| 1/2 | 4 | 341 | 171 |
+| 3/4 | 2 | 31 | 11.6 |
+| 7/8 (critical) | 1 | 5 | 1.09 |
+
+The adversary-optimal storage is $\alpha^* = 1/(\rho+2)$; even there
+the product exceeds $600\,K^2$ (~300x the honest cost). K MUST be at
+least N ($\rho \ge 1$); $\rho \ge 4$ is RECOMMENDED. A full proof
+(two-phase decomposition, temporal staleness, adaptive adversary)
+appears in {{PoSME-paper}}.
 
 ### Per-Step Recomputation Cost {#per-step-recomp}
 
@@ -1064,164 +1087,113 @@ $1/2^{64}$, giving statistical distance at most $N/2^{64}$ over
 the full distribution. For $N \le 2^{48}$, this is at most
 $2^{-16}$, which is negligible for all recommended profiles.
 
-**Theorem 3 (Spatial Cascade TMTO).** In the random oracle model,
-under Theorem 2, consider an adversary that maintains $\alpha \cdot N$
-arena blocks in working memory ($0 < \alpha < 1$) and stores all $K$
-transcript values. The adversary's expected computation per step is:
+**Theorem 3 (Space-Time Product).** In the random oracle model,
+under Theorem 2, any adversary storing $S = \alpha N$ arena vertices
+($0 < \alpha < 1$) and all $K$ transcript values requires expected
+computation $T$ satisfying:
 
 ~~~ artwork
-C_step >= d * (1 + (1-alpha) * 2*rho / alpha)
+S*T >= [ alpha*(1-alpha)*d*W(alpha,rho) / rho ] * K^2
+W(alpha,rho) = sum_{l=0}^{rho} [ d*(1-alpha) ]^l
 ~~~
 
-where $\rho = K/N$ is the write density.
+where $\rho = K/N$ and $W(\alpha,\rho)$ is the expected recursive
+recomputation cost of a single cache miss. When $d(1-\alpha) > 1$
+(i.e. $\alpha < \alpha_c = 1 - 1/d$) the recomputation is
+supercritical and $W$ grows exponentially in $\rho$; for the
+recommended $(d=8, \rho=4)$, $S \cdot T = \Omega(K^2)$ for all
+constant $\alpha$.
 
-**Proof.** The proof proceeds in three parts.
+**Proof (sketch).** Reconstruction decomposes into a static
+skip-link backbone ({{init}}), whose known-a-priori structure
+terminates any recomputation of an initialization-state vertex in
+$O(\log N)$ hash evaluations, and a dynamic overlay whose edges are
+revealed online. A cache miss at step $t$ must reconstruct a vertex
+last written at $t' < t$; that write read $d$ vertices, each itself
+absent with probability $(1-\alpha)$ (Theorem 2). Reconstruction is
+thus a Galton-Watson branching process with offspring mean
+$d(1-\alpha)$; to depth $\rho$ its expected work is
+$W(\alpha,\rho) = \sum_{\ell=0}^{\rho} \[d(1-\alpha)\]^\ell$. Each of
+the $K$ steps performs $d$ reads, missing with probability
+$(1-\alpha)$, so $T \ge K d (1-\alpha) W$; multiplying by
+$S = \alpha N$ and substituting $K = \rho N$ gives the product. The
+adversary-optimal storage is $\alpha^* = 1/(\rho+2)$; even there the
+product exceeds $600\,K^2$ ($\approx 300\times$ the honest $2K^2$).
+The lower-bound framework follows Blocki and Holman's sustained-space
+results for data-dependent memory-hard functions in the parallel
+random oracle model. The full proof, including the two-phase
+decomposition and the temporal-staleness and adaptive strengthenings
+(Theorems 4 and 5), is given in {{PoSME-paper}}.
 
-*Part 1: Write chain cost.* When a read at step $t$ targets a
-block $w$ not in the adversary's working memory, the adversary
-must reconstruct $w$'s current state. Block $w$ was written
-$\rho$ times on average (each of $K$ steps writes to a uniformly
-random block by Theorem 2). The adversary knows the cursor at
-every step (stored), so replaying one write requires one hash
-evaluation given the block's previous state and the cursor.
-Tracing $w$'s temporal write chain from initialization to the
-current epoch costs $\rho$ hash evaluations.
+### Temporal Staleness {#cascade-latency}
 
-*Part 2: Spatial cascade.* Each write to block $w$ at step
-$t'$ depends on the causal hashes of $A\[w-1\]$ and $A\[w+1\]$ at
-time $t'$ ({{spatial-binding}}). These are historical states:
-the causal hash of $w$'s neighbor at the moment $w$ was written,
-not the neighbor's current state. Even if $w-1$ is currently in
-the adversary's working memory, its state at time $t'$ is not
-recoverable from its current state (hash chains are
-irreversible). Therefore, to replay $w$'s write chain, the
-adversary must also replay the full temporal chain of $w-1$ (so
-that $w-1$'s state at each of $w$'s write times is available).
-
-Block $w-1$'s temporal chain depends on $w-2$'s historical
-causal hashes (its own spatial neighbor). If $w-2$ is not stored,
-this cascades further: $w-2 \to w-3 \to \cdots$. The cascade
-extends outward in one direction until reaching a block that is
-in the adversary's working memory; that block's full temporal
-chain is available (the adversary maintains it by construction).
-
-The same cascade extends in the opposite direction:
-$w+1 \to w+2 \to \cdots$. The cascade width in each direction
-follows a geometric distribution with success probability
-$\alpha$ (each successive neighbor is stored with probability
-$\alpha$, independently by Theorem 2's uniformity guarantee on
-write addresses). The expected cascade width in one direction
-is $(1-\alpha)/\alpha$. For all recommended profiles
-($N \ge 2^{20}$), this is negligible relative to $N$ for any
-$\alpha > 2^{-19}$; ring wrap-around does not affect the bound
-in practice. Each block in the cascade requires
-$\rho$ hash evaluations to replay its temporal chain.
-
-*Part 3: Expected per-step cost.* At each of the $K$ steps,
-the Prover makes $d$ reads. Each read targets a uniformly
-random block, which is absent from the adversary's working
-memory with probability $(1-\alpha)$. Each miss triggers a
-spatial cascade of expected total width $2(1-\alpha)/\alpha$
-blocks, each costing $\rho$ hash evaluations.
-
-The expected computation per step is:
+**Theorem 4 (Temporal Staleness).** The bound of Theorem 3 holds
+even against an adversary that stores current vertex states,
+because reconstruction requires historical states. Under
+ROM-uniform writes, a vertex read at step $t$ but last written at
+$t' < t$ is stale with probability $1 - e^{-(t-t')/N}$, so the
+effective cache-hit rate at recursion depth $\ell$ decays as
+$\alpha e^{-\ell}$, strengthening the per-miss cost to
 
 ~~~ artwork
-C_step = d + d*(1-alpha) * (2*(1-alpha)/alpha) * rho
-       = d * (1 + 2*rho*(1-alpha)^2 / alpha)
+W*(alpha,rho) >= prod_{l=0}^{rho} d*(1 - alpha*e^{-l})
 ~~~
 
-For $(1-\alpha) \approx 1$ (small $\alpha$), this simplifies to
-$d \cdot (1 + 2\rho/\alpha)$. The TMTO ratio (adversary cost
-divided by honest cost $d$) is:
+For $(d=8, \rho=4)$ the factor $d(1 - \alpha e^{-\ell}) > 1$ for
+all $\ell \ge 1$ and all $\alpha < 1$, so the process is
+supercritical at every depth beyond the first, regardless of
+$\alpha$. This eliminates the critical-storage threshold: even at
+$\alpha = 7/8$, $W = 5$ strengthens to $W^* \approx 338$.
 
-~~~ artwork
-TMTO(alpha) = 1 + 2*rho*(1-alpha)^2 / alpha
-~~~
+**Proof.** The adversary maintains $\alpha N$ current vertex states.
+Reconstruction at depth $\ell$ needs a vertex's state from
+$\sim \ell N$ steps in the past. Under one write per step to a
+uniform random vertex, the probability that the vertex was not
+rewritten in $\ell N$ steps is $(1 - 1/N)^{\ell N} \approx
+e^{-\ell}$, so a stored current value is valid only with
+probability $\alpha e^{-\ell}$ and the effective offspring mean at
+depth $\ell$ is $d(1 - \alpha e^{-\ell})$. Full derivation in
+{{PoSME-paper}}.
 
-| rho | alpha=0.5 | alpha=0.25 | alpha=0.1 | alpha=0.01 |
-|---|---|---|---|---|
-| 1 | 2x | 5x | 17x | 197x |
-| 4 | 5x | 19x | 65x | 785x |
-| 16 | 17x | 73x | 257x | 3,137x |
+### Adaptive Bound {#checkpoint-dominance}
 
-For $\alpha < 1/(2\rho)$, the TMTO ratio exceeds $2\rho^2$,
-making space reduction more expensive than honest execution
-with full storage.
+**Theorem 5 (Adaptive Bound).** The static-storage bounds of
+Theorems 3 and 4 apply without modification to an adversary that
+chooses its storage set $S_t$ adaptively as a function of
+$\{T_0, \ldots, T_{t-1}\}$ and prior ROM queries. No factor loss
+is incurred.
 
-### Sequential Cascade Latency {#cascade-latency}
+**Proof.** At each step $t$, the adaptive adversary's storage set
+$S_t$ is fixed before the step's addresses are revealed. The first
+address $v_0$ is computable from $T_{t-1}$ by a single ROM query,
+so the adversary knows *which* vertex to read; but reading it still
+requires $v_0 \in S_t$, which holds with probability $\alpha$. For
+$j \ge 1$, the address $v_j = H(\text{"addr"} \| v_{j-1} \| j)$ is a
+fresh ROM query whose output is independent of the pre-committed
+$S_t$, giving $\Pr\[v_j \in S_t\] = \alpha$. Knowing the access
+pattern does not substitute for storing values, so the adaptive
+miss rate equals the static case. Full proof in {{PoSME-paper}}.
 
-**Theorem 4 (Sequential Cascade Latency).** The spatial cascade
-of Theorem 3 adds to the adversary's sequential critical path.
-An adversary resolving a cascade of width $L$ blocks incurs at
-least $L \cdot \rho$ sequential hash evaluations that cannot be
-parallelized.
+### Amortization Resistance {#amortization}
 
-**Proof.** To replay block $w$'s temporal chain, the adversary
-needs the causal hashes of $w-1$ at each of $w$'s write times.
-These causal hashes are outputs of $w-1$'s own temporal chain.
-Therefore, $w-1$'s full temporal chain ($\rho$ sequential hash
-evaluations) must complete before $w$'s chain can begin. By the
-same argument, $w-2$'s chain must complete before $w-1$'s, and
-so on. For a cascade of width $L$ blocks, the critical path is
-$L$ sequential temporal chains of $\rho$ links each, totaling
-$L \cdot \rho$ sequential hash evaluations. Parallel hardware
-does not reduce this latency because each chain link depends on
-the output of the previous link (hash chaining) and the
-completion of the adjacent block's chain (spatial dependency).
-
-This result is significant because it means spatial entanglement
-converts a work penalty into a latency penalty: the adversary
-not only performs more total computation but takes more wall-clock
-time, directly undermining the sequential execution guarantee.
-
-### Checkpoint Dominance {#checkpoint-dominance}
-
-**Theorem 5 (Checkpoint Dominance).** Under spatial entanglement,
-partial-arena checkpoints are strictly suboptimal. For any
-adversary using checkpoints of $\alpha \cdot N$ blocks ($\alpha < 1$)
-at interval $C$ steps, the space-time product $S \times T$ satisfies:
-
-~~~ artwork
-S * T >= (2*rho*(1-alpha) + alpha) * S_full * T_full
-~~~
-
-where $S_{full} \times T_{full}$ is the space-time product for
-full-arena checkpoints. For $\rho \ge 1$, this exceeds
-$S_{full} \times T_{full}$, with the gap increasing linearly
-in $\rho$.
-
-**Proof.** A full-checkpoint adversary stores all $N$ blocks at
-interval $C$, giving storage $S_{full} = (K/C) \cdot N \cdot B$
-and replay cost $T_{full} = Q \cdot C \cdot d / 2$ per proof
-generation. The product $S_{full} \cdot T_{full}$ is independent
-of $C$ (the standard time-space tradeoff).
-
-A partial-checkpoint adversary stores $\alpha N$ blocks at
-interval $C$. Storage: $S = \alpha \cdot S_{full}(C)$. When
-replaying from a partial checkpoint, each of the $C/2$ replayed
-steps incurs spatial cascade overhead per Theorem 3. Replay
-cost per challenge: $T = T_{full}(C) \cdot (1 + 2\rho(1-\alpha)/\alpha)$.
-
-The product:
-
-~~~ artwork
-S * T = alpha * S_full * T_full * (1 + 2*rho*(1-alpha)/alpha)
-      = S_full * T_full * (alpha + 2*rho*(1-alpha))
-      = S_full * T_full * (2*rho + alpha*(1 - 2*rho))
-~~~
-
-For $\rho \ge 1$: the coefficient $(1 - 2\rho) \le -1$, so the
-product is minimized at $\alpha = 1$ (full checkpoints), where
-it equals $S_{full} \times T_{full}$. Any $\alpha < 1$ strictly
-increases the product. For $\alpha \to 0$, the ratio approaches
-$2\rho$, meaning the adversary's space-time product is $2\rho$
-times worse than with full checkpoints.
-
-**Corollary.** Spatial entanglement forces the adversary into an
-all-or-nothing checkpointing strategy: either store the complete
-arena at each checkpoint or forgo checkpointing entirely. There
-is no useful middle ground.
+The strongest attack on Theorem 3 is an adversary that memoizes
+reconstructed historical states to reuse them across cache misses,
+undercutting the per-miss branching cost $W(\alpha,\rho)$. Direct
+simulation of the dependency DAG (uniform ROM addressing per
+Theorem 2, depth-$\rho$ truncation to the Init backbone) shows this
+attack does not beat the bound. First, because a stored block is a
+live hit only when its current value equals the needed historical
+version (Theorem 4), the measured per-miss cost exceeds the flat
+$W(\alpha,\rho)$ (for $\rho=4, d=8, \alpha=1/6$: $\approx 15{,}500$
+hash evaluations against a flat $W=2324$). Second, the memoization
+attack reduces this cost only by holding a memo of
+$\approx 2N$ distinct historical states, a footprint that stays
+proportional to $N$ across $N \in \{2^{11}, 2^{12}, 2^{13}\}$; the
+memoizing adversary is therefore a full-storage adversary. Counting
+the memo as storage, the space-time product remains
+$(\alpha N + \text{memo}) \cdot T = \Omega(K^2)$ at every measured
+$\alpha$. Amortization re-pays exactly the storage the bound
+quantifies.
 
 ### Dynamic Pebbling Game {#pebbling-game}
 
@@ -1241,11 +1213,10 @@ uniformly random targets. The pebbling game is:
 Without spatial entanglement, the per-miss recomputation cost
 is $\rho$ (linear write chain), giving a TMTO ratio of
 $1 + (1-\alpha) \cdot (2\rho + 1)$. With spatial entanglement,
-Theorem 3 establishes the tighter bound
-$1 + 2\rho(1-\alpha)^2/\alpha$, and Theorem 4 proves this
-overhead is sequential (cannot be parallelized). Theorem 5
-further shows that partial-arena checkpoints are strictly
-dominated by full-arena checkpoints.
+Theorem 3 establishes the space-time
+product $S \cdot T = \Omega(K^2)$, Theorem 4 (temporal staleness)
+shows that storing current state does not reduce it, and
+Theorem 5 shows that adaptive storage gives no advantage.
 
 ## ASIC Resistance {#asic-resistance}
 
@@ -1853,6 +1824,12 @@ version counter to -00 under the Independent Submission Stream.
   delta at OSR=3 (not 1 bit flat).
 - Added embedded microcontroller entropy degradation warning.
 - Audited all RFC 2119/8174 modal verbs for correctness.
+- Replaced the space-time analysis with the branching-process
+  formulation from the companion paper: Theorem 3 (Space-Time
+  Product, S*T = Omega(K^2)), Theorem 4 (Temporal Staleness), and
+  Theorem 5 (Adaptive Bound, no factor loss), superseding the prior
+  cascade-width formula (1 + 2*rho*(1-alpha)^2/alpha) and the
+  earlier "Sequential Cascade"/"Checkpoint Dominance" theorems.
 
 ## Prior history (draft-condrey-cfrg-posme) {#prior-changes}
 {:numbered="false"}
