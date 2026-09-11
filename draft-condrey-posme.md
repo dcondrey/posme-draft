@@ -1,6 +1,6 @@
 ---
 v: 3
-docname: draft-condrey-posme-00
+docname: draft-condrey-posme-latest
 title: "Proof of Sequential Memory Execution (PoSME)"
 abbrev: PoSME
 category: exp
@@ -441,23 +441,23 @@ At each step t in {1, ..., K}:
 ~~~ pseudocode
 STEP(t):
     cursor = T_{t-1}
-    
+
     // 1. Determine Target Bank
     bank_id = XOF(cursor, 0) mod params.B_banks
-    
+
     // Start high-resolution cycle counter
-    t_start = RDTSC() 
+    t_start = RDTSC()
 
     // 2. Intra-Step Bank Collision Reads
     addrs = []
     for j in 0..d-1:
         // Generate pseudo-random address
         raw_a = XOF(cursor, j + 1) mod params.N
-        
+
         // Mutate raw_a to ensure it maps to bank_id
         a = force_bank_mapping(raw_a, bank_id, params)
         addrs.append(a)
-        
+
         val = A[a]
         cursor = H(cursor || val.data || val.causal)
 
@@ -465,14 +465,14 @@ STEP(t):
     raw_w = XOF(cursor, d + 1) mod params.N
     w = force_bank_mapping(raw_w, bank_id, params)
     old = A[w]
-    
+
     // Incorporate causal hashes of logical neighbors
     n_prev = A[(w - 1) mod params.N].causal
     n_next = A[(w + 1) mod params.N].causal
-    
-    new_data = H(old.data || cursor || old.causal 
+
+    new_data = H(old.data || cursor || old.causal
                   || n_prev || n_next)
-    new_causal = H(old.causal || cursor || I2OSP(t, 4) 
+    new_causal = H(old.causal || cursor || I2OSP(t, 4)
                     || n_prev || n_next)
     A[w] = {data: new_data, causal: new_causal}
 
@@ -544,26 +544,26 @@ derivation.
 
 ### Intra-Step Bank Collisions {#bank-collision}
 
-Standard memory controllers achieve high bandwidth by interleaving 
-sequential reads across multiple hardware banks, keeping multiple 
-row-buffers open. PoSME explicitly defeats this optimization to 
+Standard memory controllers achieve high bandwidth by interleaving
+sequential reads across multiple hardware banks, keeping multiple
+row-buffers open. PoSME explicitly defeats this optimization to
 enforce a strict latency floor.
 
-The `force_bank_mapping(raw_a, bank_id, params)` function modifies the 
-specific bits of the logical address `raw_a` that the memory controller 
-uses for bank selection, replacing them with `bank_id`. 
+The `force_bank_mapping(raw_a, bank_id, params)` function modifies the
+specific bits of the logical address `raw_a` that the memory controller
+uses for bank selection, replacing them with `bank_id`.
 
-By forcing all $d$ reads and the final write to target the *same* 
-physical bank but *different* pseudo-random rows, the memory controller 
-suffers a "Bank Conflict" on every access. This forces a physical Row 
-Precharge ($t_{RP}$) and RAS-to-CAS Delay ($t_{RCD}$) penalty for every 
-hop, anchoring the execution time to the thermodynamic limits of the 
+By forcing all $d$ reads and the final write to target the *same*
+physical bank but *different* pseudo-random rows, the memory controller
+suffers a "Bank Conflict" on every access. This forces a physical Row
+Precharge ($t_{RP}$) and RAS-to-CAS Delay ($t_{RCD}$) penalty for every
+hop, anchoring the execution time to the thermodynamic limits of the
 DRAM capacitor rather than the logic speed of the processor.
 
 ### Spatial Neighborhood Entanglement {#spatial-binding}
 
-The write step cryptographically binds the updated block to the current 
-state of its logical neighbors, `A[w-1]` and `A[w+1]`. 
+The write step cryptographically binds the updated block to the current
+state of its logical neighbors, `A[w-1]` and `A[w+1]`.
 
 This transforms the Time-Memory Trade-Off (TMTO) penalty from a
 self-contained write chain into a spatial cascade. If an adversary
@@ -1741,40 +1741,40 @@ The following problems remain open:
 
 ## Bank Mapping and Conflicts {#impl-bank}
 
-The effectiveness of intra-step bank collisions ({{bank-collision}}) 
-depends on the accuracy of the `force_bank_mapping` logic. Memory 
-controllers typically use specific physical address bits for bank 
-selection (e.g., bits 13-16 on many DDR4/DDR5 platforms). 
+The effectiveness of intra-step bank collisions ({{bank-collision}})
+depends on the accuracy of the `force_bank_mapping` logic. Memory
+controllers typically use specific physical address bits for bank
+selection (e.g., bits 13-16 on many DDR4/DDR5 platforms).
 
-Prover implementations SHOULD use platform-specific knowledge or 
-calibration loops to identify these bits. If the exact mapping is 
-unknown, the Prover MAY use a XOR-sum of multiple candidate bit 
-ranges to increase the probability of a physical bank conflict. 
+Prover implementations SHOULD use platform-specific knowledge or
+calibration loops to identify these bits. If the exact mapping is
+unknown, the Prover MAY use a XOR-sum of multiple candidate bit
+ranges to increase the probability of a physical bank conflict.
 Verifiers do not check physical mapping accuracy; they only check
 the logical consistency of the derived addresses according to the
 protocol parameters.
 
 ## Timing Counters {#impl-timing}
 
-Provers MUST use the highest-resolution monotonic hardware counter 
-available to capture `delta_t`. 
+Provers MUST use the highest-resolution monotonic hardware counter
+available to capture `delta_t`.
 
 - **x86_64:** The `RDTSC` or `RDTSCP` instructions.
 - **AArch64:** The `CNTPCT_EL0` system register.
 
-The resulting `delta_t` SHOULD NOT be normalized or filtered. Raw 
-cycle counts are required to preserve the stochastic jitter profile 
+The resulting `delta_t` SHOULD NOT be normalized or filtered. Raw
+cycle counts are required to preserve the stochastic jitter profile
 arising from DRAM refresh cycles ($t_{REFW}$) and OS-level noise.
 
 ## Cache Management {#impl-cache}
 
-To ensure the arena computation is bottlenecked by DRAM latency 
-rather than CPU cache hits, the arena size $N$ SHOULD be configured 
-to exceed the Prover's L3 cache capacity. For Standard and Maximum 
-profiles, the arena sizes (32 MiB to 2 GiB) are specifically chosen 
+To ensure the arena computation is bottlenecked by DRAM latency
+rather than CPU cache hits, the arena size $N$ SHOULD be configured
+to exceed the Prover's L3 cache capacity. For Standard and Maximum
+profiles, the arena sizes (32 MiB to 2 GiB) are specifically chosen
 to exceed the 16-96 MiB caches typical of commodity processors.
 
-Provers MAY use cache-bypass instructions (e.g., `MOVNTI` on x86) 
+Provers MAY use cache-bypass instructions (e.g., `MOVNTI` on x86)
 for arena writes to further enforce DRAM-bounded execution.
 
 # IANA Considerations {#iana-considerations}
