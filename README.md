@@ -1,17 +1,8 @@
-<!-- repo-header:start -->
-<h3 align="center">Proof of Sequential Memory Execution (PoSME)</h3>
+### Proof of Sequential Memory Execution (PoSME)
 
-<p align="center"><strong>Internet-Draft: Proof of Sequential Memory Execution (PoSME) - draft-condrey-cfrg-posme</strong></p>
+Internet-Draft: Proof of Sequential Memory Execution (PoSME), draft-condrey-cfrg-posme.
 
-<p align="center">
-  <a href="https://github.com/dcondrey/posme-draft/actions/workflows/publish.yml"><img src="https://img.shields.io/github/actions/workflow/status/dcondrey/posme-draft/publish.yml?style=flat-square&labelColor=20232a&branch=main&label=CI" alt="CI"></a>
-  <a href=".bestpractices.json"><img src="https://img.shields.io/badge/best%20practices-evidence%20reviewed-6a4c93?style=flat-square&labelColor=20232a" alt="Best Practices Evidence"></a>
-  <a href="https://datatracker.ietf.org/"><img src="https://img.shields.io/badge/standard-IETF%20draft-6a4c93?style=flat-square&labelColor=20232a" alt="IETF"></a>
-  <a href="https://github.com/sponsors/dcondrey"><img src="https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=flat-square&labelColor=20232a" alt="GitHub Sponsors"></a>
-</p>
-<!-- repo-header:end -->
-
----
+[![CI](https://img.shields.io/github/actions/workflow/status/dcondrey/posme-draft/publish.yml?branch=main&style=flat-square&label=CI)](https://github.com/dcondrey/posme-draft/actions/workflows/publish.yml) [![License](https://img.shields.io/badge/license-Public%20Domain-blue?style=flat-square)](https://github.com/dcondrey/posme-draft/blob/main/LICENSE.md)
 
 This is the working area for the individual Internet-Draft *Proof of Sequential Memory
 Execution (PoSME)*.
